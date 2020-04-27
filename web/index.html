@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    </head>
+    <body>
+
+        <div id="container">
+
+        </div>
+
+        <script type="text/javascript">
+            var $ = {};
+            $.get = function (url, success, error) {
+                var request = new XMLHttpRequest();
+                request.open('GET', url, true);
+                request.onload = function () {
+                    if (this.status >= 200 && this.status < 400) {
+                        // Success!
+                        success(this.response);
+                    } else {
+                        // We reached our target server, but it returned an error
+                        error(this.status);
+                    }
+                };
+                request.onerror = function (e) {
+                    // There was a connection error of some sort
+                    error(e);
+                };
+                request.send();
+
+            }
+            $.each = function (arr, fn) {
+                for (var index = 0; index < arr.length; index++) {
+                    var item = arr[index];
+                    fn.call(item, index, item);
+                }
+            }
+
+            $.ready = function (fn) {
+                if (document.readyState != 'loading') {
+                    fn();
+                } else {
+                    document.addEventListener('DOMContentLoaded', fn);
+                }
+            }
+
+            $.ready(function () {
+
+                function getOptions() {
+                    return {
+                        responsive: true,
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        hover: {
+                            mode: 'nearest',
+                            intersect: true
+                        },
+                    };
+                }
+
+                function dataToJson(data) {
+                    var processed = [];
+                    var lines = data.split("\n");
+                    $.each(lines, function (index, line) {
+                        var line = lines[index];
+                        if (line.trim()) {
+                            var json = JSON.parse(line);
+                            processed.push(json)
+                        }
+                    });
+
+                    return processed;
+                }
+
+                function getChartData(datasetName, jsonData) {
+
+                    var labels = [];
+                    var data = [];
+
+                    $.each(jsonData, function (index, item) {
+                        var label = item.timestamp;
+                        var value = item.duration;
+
+                        labels.push(label);
+                        data.push(value);
+                    });
+
+                    return {
+                        labels: labels,
+                        datasets: [{
+                                label: datasetName,
+                                data: data,
+                                fill: false,
+                            }]
+                    };
+                }
+                $.get('/list', function (data) {
+                    var files = JSON.parse(data);
+                    $.each(files, function (index, item) {
+                        renderChart(item);
+                    });
+                });
+                function renderChart(log) {
+
+                    $.get('/logs/' + log, function (response) {
+                        var chartObj = document.createElement('canvas');
+                        document.getElementById('container').appendChild(chartObj);
+
+                        var jsonData = dataToJson(response);
+                        var data = getChartData(log, jsonData);
+                        var options = getOptions();
+
+                        window.myLine = new Chart(chartObj, {
+                            type: 'line',
+                            data: data,
+                            options: options
+                        });
+
+                    }, function (error) {
+                        console.log(error);
+                    });
+                }
+
+
+            });
+
+        </script>
+    </body>
+</html>
