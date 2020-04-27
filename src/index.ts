@@ -1,25 +1,27 @@
 
 import * as fs from 'fs';
+import * as path from 'path';
 
 const express = require('express');
 const app = express();
+var morgan = require('morgan')
 
 const port: number = 8080;
 
 let logDir: string;
 if (process.argv.length >= 3) {
-    logDir = process.argv[2];
+    logDir = fs.realpathSync(process.argv[2]);
 } else {
     logDir = "/var/log/webmon";
 }
 
-const webDir: string = __dirname + "/web";
+const webDir: string = fs.realpathSync(path.join(__dirname, 'web'));
 
 console.log(`Logs dir ${logDir}`);
 console.log(`Web dir ${webDir}`);
 
+app.use(morgan('combined'))
 app.use("/", express.static(webDir));
-
 app.use("/logs", express.static(logDir));
 app.get('/list', (req, res) => {
 

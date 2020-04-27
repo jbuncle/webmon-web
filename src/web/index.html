@@ -1,12 +1,7 @@
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
     <head>
-        <title>TODO supply a title</title>
+        <title>WebMon Web</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
@@ -66,9 +61,39 @@ and open the template in the editor.
                             mode: 'nearest',
                             intersect: true
                         },
+                        elements: {
+                            point: {
+                                radius: 0
+                            }
+                        }
                     };
                 }
 
+                function capValue(value, cap) {
+                    if (value > cap) {
+                        return cap;
+                    }
+
+                    return value;
+                }
+                function getRoundedDate(timestamp, round) {
+                    var date = new Date(timestamp);
+                    date.setMilliseconds(0);
+                    date.setSeconds(0);
+                    var minutes = date.getMinutes();
+                    var roundedMinutes = round * Math.round(minutes / round);
+
+                    date.setMinutes(roundedMinutes);
+
+                    return date;
+                }
+
+                function getLabel(timestamp) {
+                    var roundedDate = getRoundedDate(timestamp, 5);
+                    var label = roundedDate.toISOString();
+
+                    return label.substring(0, 16).replace('T', ' ');
+                }
                 function dataToJson(data) {
                     var processed = [];
                     var lines = data.split("\n");
@@ -89,8 +114,8 @@ and open the template in the editor.
                     var data = [];
 
                     $.each(jsonData, function (index, item) {
-                        var label = item.timestamp;
-                        var value = item.duration;
+                        var label = getLabel(item.timestamp);
+                        var value = capValue(item.duration, 600);
 
                         labels.push(label);
                         data.push(value);
