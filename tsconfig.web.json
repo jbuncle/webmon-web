@@ -1,0 +1,23 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "module": "es6",
+        "target": "es5",
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "strictNullChecks": false
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "vendor",
+        "**/*.spec.ts",
+        "src/server.ts"
+    ]
+}

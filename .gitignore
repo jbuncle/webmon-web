@@ -3,3 +3,4 @@
 /dist
 /configuration.json
 /*.log
+/src/**.js

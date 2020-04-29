@@ -1,8 +1,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as express from 'express';
 
-const express = require('express');
 const app = express();
 var morgan = require('morgan')
 
