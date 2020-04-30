@@ -1,7 +1,34 @@
 export type Map<T> = {[key: string]: T;};
 export type NumericMap<T> = {[key: number]: T;};
 
-export class $ {
+export class Util {
+
+    private readonly elements: NodeListOf<Element>;
+
+    public constructor(selector: string) {
+        this.elements = document.querySelectorAll(selector);
+    }
+
+    public first(): Element | undefined {
+        if (this.elements.length) {
+            return this.elements.item(0);
+        }
+        return undefined;
+    }
+    public value(): string | undefined {
+        const first: Element | undefined = this.first();
+        if (first !== undefined) {
+            return (<HTMLInputElement> first).value;
+        }
+        return undefined;
+    }
+    public on(event: string, handler: EventListener): Util {
+        for (let index = 0; index < this.elements.length; index++) {
+            const element: Element = this.elements[index]
+            element.addEventListener(event, handler);
+        }
+        return this;
+    }
 
     public static objectSort<T>(
         unordered: {[data: string]: T},
@@ -27,8 +54,8 @@ export class $ {
 
         const allData: {[data: string]: T | undefined} = {};
 
-        $.each(urls, (index, url: string) => {
-            $.get(url, (data: T) => {
+        Util.each(urls, (index, url: string) => {
+            Util.get(url, (data: T) => {
                 urls.splice(urls.indexOf(url), 1)
                 allData[url] = data;
                 if (urls.length < 1) {
@@ -45,10 +72,17 @@ export class $ {
             });
         });
     }
+
+    public static promiseGet<T>(url: string): Promise<T> {
+        return new Promise((resolutionFunc, rejectionFunc) => {
+            Util.get(url, resolutionFunc, rejectionFunc);
+        });
+    }
+
     public static get(
         url: string,
         success: (data: any) => void,
-        error: (error: Event | number) => void
+        error: (error: any) => void
     ) {
         const request: XMLHttpRequest = new XMLHttpRequest();
         request.open('GET', url, true);

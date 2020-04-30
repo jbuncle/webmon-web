@@ -3,13 +3,15 @@
     "compilerOptions": {
         "moduleResolution": "node",
         "module": "es6",
-        "target": "es5",
+        "target": "es2015",
         "removeComments": true,
         "preserveConstEnums": true,
         "typeRoots": [
             "node_modules/@types"
         ],
-        "strictNullChecks": false
+        "strictNullChecks": false,
+        "lib": ["es2015", "es2016", "dom", "es2018.promise"]
+
     },
     "include": [
         "src/**/*.ts"

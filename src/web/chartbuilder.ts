@@ -1,65 +1,95 @@
 import {Chart, ChartOptions, ChartData, ChartDataSets} from "chart.js";
-import {$} from './util';
-import {LogData} from "./frontend";
+import {Util} from './util';
 
+export type ChartSeries = {[key: string]: number;};
 
-export interface LogDataSet {
+export interface ChartDataSet {
     name: string,
-    data: LogData
+    data: ChartSeries
 }
 
 export class ChartBuilder {
-    private readonly datasets: Array<LogDataSet>;
+    private readonly datasets: Array<ChartDataSet>;
+    private chart: Chart | undefined;
 
     public constructor(
-        private readonly chartCanvas: HTMLCanvasElement
+        private readonly chartCanvas: HTMLCanvasElement,
+        private cap: number = 1500
     ) {
         this.datasets = [];
     }
 
-    public addDataset(log: string, jsonData: LogData): void {
+    public setCap(cap: number): void {
+        this.cap = cap;
+    }
+
+    public addDataset(log: string, jsonData: ChartSeries): void {
         this.datasets.push({
             name: log,
             data: jsonData,
         })
+    }
+    
+    public update(): void {
+        if (this.chart !== undefined) {
+            this.chart.data = this.getChartData();
+            this.chart.options = this.getOptions();
+            this.chart.update();
+        }
+    }
+
+    public updateData(): void {
+        if (this.chart !== undefined) {
+            this.chart.data = this.getChartData();
+            this.chart.update();
+        }
+    }
+
+    public updateOptions(): void {
+        if (this.chart !== undefined) {
+            this.chart.options = this.getOptions();
+            this.chart.update();
+        }
     }
 
     public buildChart(): Chart {
         const data: ChartData = this.getChartData();
         const options: ChartOptions = this.getOptions();
 
-        return new Chart(this.chartCanvas, {
+        this.chart = new Chart(this.chartCanvas, {
             type: 'line',
             data: data,
             options: options
         });
+
+        return this.chart;
     }
 
     private getLabels(): Array<string> {
         // Get all possible labels
         let labels: Array<string> = new Array();
-        $.each(this.datasets, (index: number, item: LogDataSet) => {
+        Util.each(this.datasets, (index: number, item: ChartDataSet) => {
 
             // Iterate the dataset
-            $.items(item.data, (key: string, value: number) => {
+            Util.items(item.data, (key: string, value: number) => {
                 if (labels.indexOf(key) < 0) {
                     labels.push(key);
                 }
             });
         });
 
-        labels = $.arrayUnique(labels);
+        labels = Util.arrayUnique(labels);
         labels.sort();
         return labels;
     }
 
-    private toValues(labels: Array<string>, data: LogData): Array<number | undefined> {
+    private toValues(labels: Array<string>, data: ChartSeries): Array<number | undefined> {
 
         const values: Array<number | undefined> = [];
-        $.each(labels, (index: number, key: string) => {
+        Util.each(labels, (index: number, key: string) => {
             if (data[key]) {
                 const value: number = data[key];
-                const cappedValue: number = this.capValue(value, 600);
+                const cappedValue: number = this.capValue(value, this.cap);
                 values.push(cappedValue);
             } else {
                 values.push(undefined);
@@ -71,7 +101,7 @@ export class ChartBuilder {
     private getDataSets(labels: Array<string>): ChartDataSets[] {
         const dataset: ChartDataSets[] = [];
 
-        $.each(this.datasets, (index: number, logDataSet: LogDataSet) => {
+        Util.each(this.datasets, (index: number, logDataSet: ChartDataSet) => {
             const color: string = this.getColorForString(logDataSet.name);
             dataset.push({
                 label: logDataSet.name,
@@ -117,7 +147,17 @@ export class ChartBuilder {
                 point: {
                     radius: 0
                 }
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: this.cap
+                    }
+                }]
             }
+
         };
     }
 

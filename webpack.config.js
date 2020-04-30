@@ -29,10 +29,12 @@ const base = {
     // This is important because it allows us to avoid bundling all of our
     // dependencies, which allows browsers to cache those libraries between builds.
     externals: {
-//        "chart.js": "Chart",
-        moment: 'moment'
-    }
+        "jQuery": "jquery",
 
+//        "chart.js": "Chart",
+//        moment: 'moment'
+    },
+    entry: ['core-js/stable/promise', './app/js']
 };
 
 
@@ -64,5 +66,6 @@ module.exports = (env, options) => {
             path: path.resolve(__dirname, 'src/web/')
         };
     }
+
     return  [frontend];
 }
