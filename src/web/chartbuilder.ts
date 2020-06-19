@@ -23,13 +23,19 @@ export class ChartBuilder {
         this.cap = cap;
     }
 
+    public clear():void {
+        while(this.datasets.length) {
+            this.datasets.pop();
+        }
+    }
+    
     public addDataset(log: string, jsonData: ChartSeries): void {
         this.datasets.push({
             name: log,
             data: jsonData,
         })
     }
-    
+
     public update(): void {
         if (this.chart !== undefined) {
             this.chart.data = this.getChartData();
@@ -192,15 +198,24 @@ export class ChartBuilder {
     }
 
     private stringToColour(str: string): string {
-        var hash = 0;
-        for (var i = 0; i < str.length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        var colour = '#';
-        for (var i = 0; i < 3; i++) {
-            var value = (hash >> (i * 8)) & 0xFF;
+        const numericHash: number = this.hashCode(str);
+        
+        var colour: string = '#';
+        for (var charIndex = 0; charIndex < 3; charIndex++) {
+            var value = (numericHash >> (charIndex * 8)) & 0xFF;
             colour += ('00' + value.toString(16)).substr(-2);
         }
         return colour;
+    }
+    
+    private hashCode(str: string): number {
+        let hash: number = 0;
+        let chr;
+        for (let index = 0; index < str.length; index++) {
+            chr = str.charCodeAt(index);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
     }
 }

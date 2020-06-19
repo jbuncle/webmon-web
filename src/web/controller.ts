@@ -1,51 +1,72 @@
-import {Util} from './util';
-import {ChartBuilder} from './chartbuilder';
-import {Api, ApiLogFile, ApiLogEntry, ApiLogFileInfo} from './api';
-import {ChartSeries} from './chartbuilder';
+import { Util } from './util';
+import { ChartBuilder } from './chartbuilder';
+import { Api, ApiLogFile, ApiLogEntry, ApiLogFileInfo } from './api';
+import { ChartSeries } from './chartbuilder';
+import { SelectBox } from './selectbox';
 
 export class Controller {
 
-    private readonly charts: ChartBuilder[] = [];
+    private chart: ChartBuilder | undefined;
+    
+    private cap: number = 600;
+    
+    private logsByDate: { [key: string]: ApiLogFileInfo[] } | undefined;
 
     public constructor(
         private readonly api: Api,
         private readonly container: HTMLElement,
+        private readonly dropDown: SelectBox,
     ) {
 
     }
 
-    public updateCap(cap: number): void {
-        Util.each(this.charts, (index: number, chart: ChartBuilder): void => {
-            chart.setCap(cap);
-            chart.update();
+    public init(): void {
+        this.dropDown.onChange((ev: Event) => {
+            const value = this.dropDown.getValue();
+            this.renderChart(value, this.logsByDate[value]);
         });
-    }
-
-    public render(cap: number): void {
-        this.api.list().then((logsByDate: {[key: string]: ApiLogFileInfo[]}) => {
+        // Get list items
+        this.api.list().then((logsByDate: { [key: string]: ApiLogFileInfo[] }) => {
+            this.logsByDate = logsByDate;
+            
             Util.items(logsByDate, (date: string, logInfos: ApiLogFileInfo[]) => {
-                const urls: string[] = logInfos.map((logInfo: ApiLogFileInfo) => {
-                    return logInfo.path;
-                });
-                const chartBuilder = new ChartBuilder(this.createCanvas(), cap);
-                this.charts.push(chartBuilder);
-
-                this.api.logs(urls).then((apiLogFiles: ApiLogFile[]) => {
-
-                    Util.each(apiLogFiles, (index: number, apiLogFile: ApiLogFile) => {
-                        const seriesName: string = apiLogFile.info.domain;
-                        const seriesData: ChartSeries = this.entriesToSeries(apiLogFile.entries);
-                        chartBuilder.addDataset(seriesName, seriesData);
-                    });
-                }).catch((err) => {
-                    console.error(err);
-                }).finally(() => {
-                    chartBuilder.buildChart();
-                })
+               this.dropDown.addOption(date, date); 
             });
         });
     }
+       
+    public updateCap(cap: number): void {
+        this.cap = cap;
+    }
 
+    private renderChart(date: string, logInfos: ApiLogFileInfo[]) {
+        const urls: string[] = logInfos.map((logInfo: ApiLogFileInfo) => {
+            return logInfo.path;
+        });
+        let chartBuilder ;
+        if (this.chart !== undefined) {
+            chartBuilder = this.chart;
+            chartBuilder.setCap(this.cap);
+        } else {
+            chartBuilder = new ChartBuilder(this.createCanvas(), this.cap);
+            this.chart = chartBuilder;
+        }
+            
+        this.api.logs(urls).then((apiLogFiles: ApiLogFile[]) => {
+            chartBuilder.clear();
+            chartBuilder.update();
+            Util.each(apiLogFiles, (index: number, apiLogFile: ApiLogFile) => {
+                const seriesName: string = apiLogFile.info.domain;
+                const seriesData: ChartSeries = this.entriesToSeries(apiLogFile.entries);
+                chartBuilder.addDataset(seriesName, seriesData);
+            });
+        }).catch((err) => {
+            console.error(err);
+        }).finally(() => {
+            chartBuilder.buildChart();
+        });
+    }
+     
     private entriesToSeries(apiLogEntrys: ApiLogEntry[]): ChartSeries {
         const logAsSeries: ChartSeries = {};
         Util.each(apiLogEntrys, (index: number, entry: ApiLogEntry) => {

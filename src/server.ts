@@ -35,6 +35,6 @@ app.get('/list', (req, res) => {
 
         res.send(filtered);
     })
-})
+});
 
 app.listen(port, () => console.log(`Listening on port ${port}!`));

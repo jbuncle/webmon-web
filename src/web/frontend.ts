@@ -1,24 +1,30 @@
-import {Util} from './util';
-import {Api} from './api';
-import {Controller} from './controller';
+import { Util } from './util';
+import { Api } from './api';
+import { Controller } from './controller';
+import { SelectBox } from './selectbox';
 
-Util.ready(function () {
+Util.ready(function() {
 
 
     const api: Api = new Api();
-    
+
     const container: HTMLElement | null = document.getElementById('container');
     if (container === null) {
         throw new Error("Failed to find #container");
     }
-    
-    const controller: Controller = new Controller(api, container);
-    
+    const logSelect: HTMLElement | null = document.getElementById('log');
+    if (container === null) {
+        throw new Error("Failed to find #log");
+    }
+
+    const selectBox: SelectBox = new SelectBox(<HTMLSelectElement> logSelect);
+    const controller: Controller = new Controller(api, container,selectBox);
+
     const $durationCapControl = jQuery('#durationCap');
     $durationCapControl.on('change', (e: Event) => {
         e.preventDefault();
 
-        const element: HTMLInputElement = <HTMLInputElement> e.target;
+        const element: HTMLInputElement = <HTMLInputElement>e.target;
         const value = parseInt(element.value);
         controller.updateCap(value);
     });
@@ -31,5 +37,5 @@ Util.ready(function () {
         initialCap = initialCapRaw;
     }
 
-    controller.render(initialCap);
+    controller.init();
 });
