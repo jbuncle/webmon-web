@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Remove stale lockfile
+        run: rm -f package-lock.json
+
       - name: Install dependencies
         run: npm install
 
