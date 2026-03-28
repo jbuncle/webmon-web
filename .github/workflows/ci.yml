@@ -26,9 +26,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install compatible type packages
-        run: npm install --save-dev typescript@3.9.10 @types/node@14.18.63 @types/express@4.17.6 @types/express-serve-static-core@4.17.19 @types/jquery@3.3.31
-
       - name: Build project
         env:
           NODE_OPTIONS: --openssl-legacy-provider
